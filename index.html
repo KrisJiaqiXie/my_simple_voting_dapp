@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Voting DApp</title>
+    <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.0/css/bootstrap.min.css">
+</head>
+<body class="container">
+    <h1>Simple Voting DApp</h1>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                   <th>Candidate</th>
+                    <th>Vote Count</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Alice</td>
+                    <td id="candidate-1"></td>
+                </tr>
+                <tr>
+                    <td>Bob</td>
+                    <td id="candidate-2"></td>
+                </tr>
+                <tr>
+                    <td>Cary</td>
+                    <td id="candidate-3"></td>
+                </tr>
+            </tbody>
+        </table>
+        <input type="text" id="candidate"/>
+        <a href="#" onclick="voteForCandidate" class="btn btn-primary">Vote</a>
+    </div>
+</body>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js/dist/web3.min.js"></script>
+<script>
+    function voteForCandidate(){
+        let candidateName = $("#candidate").val()
+            contractInstance.methods['vote'](candidateName,{from:web3.eth.accounts[0]}).call().then((err,res)=>{
+                if(err){
+                    console.log(err)
+                }else{
+                    let id = candidates[candidateName]
+                    let count = contractInstance.totalVotesFor(candidateName).toString()
+                    $("#"+id).html(count);
+                }
+            })
+    }
+
+    var web3 = new Web3(new Web3.providers.HttpProvider("http://192.168.119.128:8545"))
+    var abi = JSON.parse('[{"constant":true,"inputs":[{"name":"candidateName","type":"bytes32"}],"name":"totalVotesFor","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"name":"","type":"bytes32"}],"name":"votesReceived","outputs":[{"name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"candidateName","type":"bytes32"}],"name":"vote","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"name":"","type":"uint256"}],"name":"candidateList","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"inputs":[{"name":"candidateListName","type":"bytes32[]"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"}]\n')
+    var contractAddr="0x7020309bc2cec4700c889e1f01450ba6b7f75661"
+    var VotingContract = new web3.eth.Contract(abi)
+    VotingContract.options.address = contractAddr
+
+    var candidates={
+        "Alice":"candidate-1",
+        "Bob":"candidate-2",
+        "Cary":"candidate-3",
+    }
+
+
+    $(document).ready(()=>{
+        var candidateList = Object.keys(candidates)
+        for(let i=0;i<candidateList.length;i++){
+            let name = candidateList[i]
+            VotingContract.methods['totalVotesFor'](name).call().then(res=>{
+                $("#"+candidates[name]).html(res)
+            })
+        }
+    });
+</script>
+</html>
